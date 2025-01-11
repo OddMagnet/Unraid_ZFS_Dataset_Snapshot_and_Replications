@@ -5,6 +5,9 @@
 # #   (needs Unraid 6.12 or above)                                                                                                        # #
 # #   by - SpaceInvaderOne                                                                                                                # # 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# DO NOT MANUALLY CHANGE THIS!!!
+current_version=1
+
 #
 # Main Variables
 #
@@ -115,8 +118,24 @@ if [[ "$flag" == "success" ]]; then
 #
 ####################
 #
+# This function checks what the latest version of the script is.
+# From gist: https://gist.github.com/lukechilds/a83e1d7127b78fef38c2914c4ececc3c
+get_latest_release() {
+  curl --silent "https://api.github.com/repos/SpaceinvaderOne/Unraid_ZFS_Dataset_Snapshot_and_Replications/releases/latest" | # Get latest release from GitHub api
+    grep '"tag_name":' |                                            # Get tag line
+    sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
+}
+#
+####################
+#
 # This function performs pre-run checks.
 pre_run_checks() {
+  # check for new version of the script
+  if [ $current_version -lt $((get_latest_release)) ]; then
+    msg='There is a new version of this script, please check the repository for an update'
+    echo "$msg"
+    unraid_notify "$msg" "warning"
+  fi
   # check for essential utilities
   if [ ! -x "$(which zfs)" ]; then
     msg='ZFS utilities are not found. This script is meant for Unraid 6.12 or above (which includes ZFS support). Please ensure you are using the correct Unraid version.'
